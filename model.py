@@ -5,8 +5,8 @@ import time
 
 from matplotlib import pyplot as plt
 
-from buildGenerator import buildGenerator
-from buildDiscriminator import buildDiscriminator
+from Generator import buildGenerator
+from Discriminator import buildDiscriminator
 import scipy.signal as scig
 import numpy as np
 import scipy 
