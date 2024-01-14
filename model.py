@@ -244,7 +244,7 @@ def fit(train_ds, epochs, test_ds):
 
 fit(train_dataset, EPOCHS, test_dataset)
 
-#checkpoint.restore(tf.train.latest_checkpoint(checkpoint_dir))
+checkpoint.restore(tf.train.latest_checkpoint(checkpoint_dir))
 
 for example_input, example_target in test_dataset.take(5):
     generate_images(generator, example_input, example_target)
