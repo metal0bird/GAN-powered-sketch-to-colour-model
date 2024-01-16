@@ -74,7 +74,7 @@ def load_numpy(image_file):
     input_image = image[:, w:, :]
 
     # Apply hue from real image to input image
-    input_image = apply_result_hue_to_input_numpy(input_image, real_image)
+    input_image = apply_result_hue_to_input(input_image, real_image)
 
     input_image = tf.convert_to_tensor(input_image, dtype=tf.float32)
     real_image = tf.convert_to_tensor(real_image, dtype=tf.float32)
@@ -166,14 +166,14 @@ def discriminator_loss(disc_real_output, disc_generated_output):
 generator_optimizer = tf.keras.optimizers.legacy.Adam(2e-4, beta_1=0.5)
 discriminator_optimizer = tf.keras.optimizers.legacy.Adam(2e-4, beta_1=0.5)
 
-checkpoint_dir = './Sketch2Color_training_checkpoints'
+checkpoint_dir = './training_checkpoints'
 checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
 checkpoint = tf.train.Checkpoint(generator_optimizer=generator_optimizer,
                                  discriminator_optimizer=discriminator_optimizer,
                                  generator=generator,
                                  discriminator=discriminator)
 
-def generate_images(model, test_input, tar):
+def generate_images(model, test_input, tar, epoch):
     prediction = model(test_input, training=True)
     plt.figure(figsize=(15,15))
 
@@ -185,10 +185,11 @@ def generate_images(model, test_input, tar):
         plt.title(title[i])
         plt.imshow(display_list[i] * 0.5 + 0.5)
         plt.axis('off')
-    plt.show()
+    plt.savefig("progressV2/image_"+str(epoch)+".png")
+    #plt.show()
 
 import datetime
-log_dir="Sketch2Coloe_logs/"
+log_dir="logs/"
 
 summary_writer = tf.summary.create_file_writer(
   log_dir + "fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
@@ -224,14 +225,17 @@ def fit(train_ds, epochs, test_ds):
     for epoch in range(epochs):
         start = time.time()
 
-        for example_input, example_target in test_ds.take(1):
-            generate_images(generator, example_input, example_target)
+        #for example_input, example_target in test_ds.take(1):
+        #    generate_images(generator, example_input, example_target)
+
+        generate_images(generator,sample_input,sample_output,epoch)
         print("Epoch: ", epoch)
 
         for n, (input_image, target) in train_ds.enumerate():
             print('.', end='')
             if (n+1) % 100 == 0:
                 print()
+
             train_step(input_image, target, epoch)
         print()
 
@@ -242,6 +246,10 @@ def fit(train_ds, epochs, test_ds):
                                                         time.time()-start))
     checkpoint.save(file_prefix = checkpoint_prefix)
 
+#to take a random image for testing while training
+for input , output in test_dataset.take(1):
+    sample_input , sample_output = input , output
+
 fit(train_dataset, EPOCHS, test_dataset)
 
 checkpoint.restore(tf.train.latest_checkpoint(checkpoint_dir))
@@ -249,4 +257,4 @@ checkpoint.restore(tf.train.latest_checkpoint(checkpoint_dir))
 for example_input, example_target in test_dataset.take(5):
     generate_images(generator, example_input, example_target)
 
-generator.save('AnimeColorizationModelv1.h5')
+generator.save('AnimeColorizationModelv3.h5')
