@@ -64,22 +64,14 @@ def load(image_file):
 
     return input_image, real_image
 
-def load_numpy(image_file):
-    # Load image using Pillow
-    image = np.array(Image.open(image_file))
+def load_single(image_file):
 
-    # Split image into halves
-    w = image.shape[1] // 2
-    real_image = image[:, :w, :]
-    input_image = image[:, w:, :]
+    image = tf.io.read_file(image_file)
+    image = tf.image.decode_png(image)
 
-    # Apply hue from real image to input image
-    input_image = apply_result_hue_to_input(input_image, real_image)
+    image = tf.cast(image, tf.float32)
 
-    input_image = tf.convert_to_tensor(input_image, dtype=tf.float32)
-    real_image = tf.convert_to_tensor(real_image, dtype=tf.float32)
-
-    return input_image, real_image
+    return image
 
 
 def resize(input_image, real_image, height, width):
@@ -129,6 +121,14 @@ def load_image_test(image_file):
 
     return input_image, real_image
 
+def load_image_outliers(image_file):
+    input_image = load_single(image_file)
+    input_image = resize(input_image, input_image,
+                                   IMG_HEIGHT, IMG_WIDTH)
+    input_image , input_image = normalize(input_image,input_image)
+
+    return input_image
+
 train_dataset = tf.data.Dataset.list_files(PATH+'/train/*.png')
 train_dataset = train_dataset.map(load_image_train, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 train_dataset = train_dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
@@ -136,6 +136,14 @@ train_dataset = train_dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
 test_dataset = tf.data.Dataset.list_files(PATH+'/val/*.png')
 test_dataset = test_dataset.map(load_image_test)
 test_dataset = test_dataset.batch(BATCH_SIZE)
+
+gif_dataset = tf.data.Dataset.list_files(PATH+'/gif/*.png')
+gif_dataset = gif_dataset.map(load_image_test)
+gif_dataset = gif_dataset.batch(BATCH_SIZE)
+
+#outliers_dataset = tf.data.Dataset.list_files(PATH+'/outliers/*.png')
+#outliers_dataset = outliers_dataset.map(load_image_outliers)
+#outliers_dataset = outliers_dataset.batch(BATCH_SIZE)
 
 generator = buildGenerator()
 
@@ -185,7 +193,7 @@ def generate_images(model, test_input, tar, epoch):
         plt.title(title[i])
         plt.imshow(display_list[i] * 0.5 + 0.5)
         plt.axis('off')
-    plt.savefig("progressV2/image_"+str(epoch)+".png")
+    plt.savefig("progressV2/image_"+str(epoch+4)+".png")
     #plt.show()
 
 import datetime
@@ -239,7 +247,7 @@ def fit(train_ds, epochs, test_ds):
             train_step(input_image, target, epoch)
         print()
 
-        if (epoch + 1) % 5 == 0:
+        if (epoch + 1) % 4 == 0:
             checkpoint.save(file_prefix = checkpoint_prefix)
 
         print ('Time taken for epoch {} is {} sec\n'.format(epoch + 1,
@@ -247,12 +255,13 @@ def fit(train_ds, epochs, test_ds):
     checkpoint.save(file_prefix = checkpoint_prefix)
 
 #to take a random image for testing while training
-for input , output in test_dataset.take(1):
+for input , output in gif_dataset.take(1):
     sample_input , sample_output = input , output
 
-fit(train_dataset, EPOCHS, test_dataset)
 
 checkpoint.restore(tf.train.latest_checkpoint(checkpoint_dir))
+
+fit(train_dataset, EPOCHS, test_dataset)
 
 for example_input, example_target in test_dataset.take(5):
     generate_images(generator, example_input, example_target)
