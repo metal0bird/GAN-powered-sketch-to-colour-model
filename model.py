@@ -193,7 +193,7 @@ def generate_images(model, test_input, tar, epoch):
         plt.title(title[i])
         plt.imshow(display_list[i] * 0.5 + 0.5)
         plt.axis('off')
-    plt.savefig("progressV2/image_"+str(epoch+4)+".png")
+    plt.savefig("progressV2/image_"+str(epoch+6)+".png")
     #plt.show()
 
 import datetime
@@ -247,7 +247,7 @@ def fit(train_ds, epochs, test_ds):
             train_step(input_image, target, epoch)
         print()
 
-        if (epoch + 1) % 4 == 0:
+        if (epoch + 1) % 5 == 0:
             checkpoint.save(file_prefix = checkpoint_prefix)
 
         print ('Time taken for epoch {} is {} sec\n'.format(epoch + 1,
