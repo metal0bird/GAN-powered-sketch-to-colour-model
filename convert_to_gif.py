@@ -1,4 +1,5 @@
 from PIL import Image
+import os
 
 def create_gif(folder_path, output_filename, duration=100, loop=0):
 
@@ -7,4 +8,4 @@ def create_gif(folder_path, output_filename, duration=100, loop=0):
   first_frame.save(output_filename, format="GIF", append_images=frames, save_all=True, duration=duration, loop=loop)
 
 # Example usage
-create_gif("progressV2", "animation.gif", duration=200, loop=1)
+create_gif("cropped_images", "animation.gif", duration=200, loop=2)

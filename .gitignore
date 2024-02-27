@@ -2,3 +2,5 @@ progress/
 progressV2/
 logs/
 training_checkpoints/
+cropped_images/
+animation.gif
